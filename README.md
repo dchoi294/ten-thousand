@@ -1,4 +1,4 @@
-# LAB - Class 6
+# LAB - Class 06-07
 
 ### Project: Ten Thousand - version 1
 
