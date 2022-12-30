@@ -48,6 +48,20 @@ class GameLogic:
 
         return score
 
+    @staticmethod
+    def validate_keepers(numb, keeps):
+        numb = list(numb)
+        keeps = list(keeps)
+        if keeps == []:
+            return False
+        for dice in keeps:
+            is_inside = numb.count(dice)
+            if is_inside > 0:
+                numb.remove(dice)
+            else:
+                return False
+        return True
+
         # if dice_count[0][1] == 3:
         #     if dice_count[0][0] == 1:
         #         score += 1000
