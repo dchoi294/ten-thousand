@@ -35,6 +35,9 @@ def diff(game_play_func, path="", sample=""):
 
         nonlocal text
 
+        if not responses:
+            sys.exit(1)
+
         response = responses.pop(0)
 
         text += "".join(args) + response + "\n"
@@ -42,22 +45,28 @@ def diff(game_play_func, path="", sample=""):
         return response
 
     # inner function to mock rolling of dice
-    def mock_roller():
+    def mock_roller(num):
         if not rolls:
             sys.exit(1)
 
-        return rolls.pop(0)
+        roll = rolls.pop(0)
+
+        assert len(roll) == num, f"unexpected number of dice {num}"
+
+        return roll
 
     # store the "real" print & input so we can restore them later
     real_print = builtins.print
     real_input = builtins.input
 
-    # mock the built in print & input
+    # mock the builtin print & input
     builtins.print = mock_print
     builtins.input = mock_input
 
     try:
         game_play_func(roller=mock_roller)
+    except AssertionError:
+        real_print("Simulation failure.")
     except SystemExit:
         real_print("No problem. System exits are allowed in this app.")
 
@@ -102,7 +111,6 @@ def _extract_rolls(lines):
 
 
 def _find_differences(text, expected_lines):
-
     actual_lines = text.splitlines()
 
     diffed = difflib.unified_diff(actual_lines, expected_lines, lineterm="")
