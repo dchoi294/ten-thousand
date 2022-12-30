@@ -16,9 +16,8 @@ def intro():
     user = input("> ")
 
     if user == "n":
-        global on_off
-        on_off = False
         print("OK. Maybe another time")
+        quit()
     else:
         play_dice()
 
