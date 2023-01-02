@@ -1,14 +1,5 @@
 from game_logic import GameLogic
 
-round_score = 0
-round_count = 1
-count = 1
-user_score = 0
-dice_left = 6
-winning_score = 10000
-bank = 0
-current_dice = []
-
 
 def intro():
     print("Welcome to Ten Thousand")
@@ -18,108 +9,82 @@ def intro():
     if user == "n":
         print("OK. Maybe another time")
         quit()
-    else:
+    if user == "y":
         play_dice()
+
+
+def start():
+    score = 0
+    round_number = 1
+    while True:
+        round_score = play_dice(round_number)
+        if round_score == -1:
+            break
+
+        score += round_score
+        print(f"You banked {round_score} points in round {round_number}")
+        print(f"Total score is {score} points")
+        round_number += 1
+
+    print(f"Thanks for playing. You earned {score} points")
 
 
 def default_play(numb):
     return GameLogic.roll_dice(numb)
 
 
-def check_zilch(check):
-    check = GameLogic.calculate_score(check)
-    if check == 0:
-        print("****************************************")
-        print("**        Zilch!!! Round over         **")
-        print("****************************************")
-
-        global user_score
-        global bank
-        global round_count
-        global current_dice
-
-        bank = 0
-        print(f"You banked {bank} in round {round_count}")
-        print(f"Total score is {user_score} points")
-
-        round_count += 1
-        play_dice(dice_left)
-
-
-def bank_score():
-    global user_score
-    global bank
-    global dice_left
-    global round_count
-    global round_score
-    global current_dice
-
-    user_score += bank
-    print(f"You banked {bank} in round {round_count}")
-    print(f"Total score is {user_score} points")
-
-    bank = 0
-    round_count += 1
-    dice_left = 6
-    current_dice = []
-    round_score = 0
-    play_dice(dice_left)
-
-
-def play_dice(play=default_play):
-
-    global user_score
-    global round_count
-    global count
-    global round_score
-    global dice_left
-    global current_dice
-
-    if round == round_count:
-        print(f"Starting round {round_count}")
-        round_count += 1
+def confirm_keepers(roll, roll_string):
 
     while True:
-
-        print(f"Rolling {dice_left - len(current_dice)} dice...")
-        roll = play(6 - len(current_dice))
-        playing = GameLogic.roll_dice(roll)
-        roll_list = []
-        roll_str = ""
-        for i in roll:
-            roll_list.append(i)
-            roll_str += str(i) + " "
-        print(f"*** {roll_str} ***")
-
-        check_zilch(tuple(roll_list))
-
-        print(f"Enter dice to keep, or (q)uit:")
+        print("Enter dice to keep, or (q)uit:")
         user = input("> ")
+
         if user == "q":
-            print(f"Thanks for playing. you earned {user_score} points")
-            quit()
+            return -1
+
+        keep = [int(value) for value in user if value.isdigit()]
+
+        if GameLogic.validate_keepers(roll, keep):
+            return keep
         else:
-            while GameLogic.validate_keepers(roll_list, [int(i) for i in user]) is False:
-                print("Cheater!!! Or possibly you made a typo. Try again")
-                print(f"*** {roll_str}***")
-                print("Enter dice to keep, or (q)uit:")
-            for numb in user:
-                current_dice.append(int(numb))
-            round_score += GameLogic.calculate_score(tuple(current_dice))
+            print("Cheater!!! Or possibly made a typo...")
+            print(f"*** {roll_string} ***")
 
-            if len(current_dice) == 6:
-                print("HOT DICE, you get to roll 6 new ones")
-                current_dice = []
 
-            print("(r)oll again, (b)ank your points or (q)uit:")
-            user = input("> ")
+def play_dice(round_number, roller=default_play):
+    dice_numb = 6
+    round_score = 0
+    print(f"Starting round {round_number}")
+    while True:
+        roll_string = ""
+        roll = roller(dice_numb)
+        for x in roll:
+            roll_string += str(x) + " "
+        print(f"Rolling {dice_numb} dice...")
+        print(f"*** {roll_string} ***")
 
-            if user == "b":
-                bank_score()
+        if GameLogic.calculate_score(roll) == 0:
+            print("****************************************")
+            print("**        Zilch!!! Round over         **")
+            print("****************************************")
+            round_score = 0
+            return round_score
 
-            if user == "q":
-                print(f"Thanks for playing. you earned {user_score} points")
-                quit()
+        keepers = confirm_keepers(roll, roll_string)
+        if keepers == -1:
+            return -1
+        dice_numb -= len(keepers)
+        if dice_numb == 0:
+            dice_numb = 6
+        round_score += GameLogic.calculate_score(tuple(keepers))
+
+        print(f"You have {round_score} unbanked points and {dice_numb} dice remaining")
+        print("(r)oll again, (b)ank your points or (q)uit:")
+        user = input("> ")
+        if user == "b":
+            return round_score
+        if user == "q":
+            return -1
 
         # if user == "r":
         #     roll = GameLogic.roll_dice(dice_left)
@@ -151,5 +116,10 @@ def play_dice(play=default_play):
 
 
 if __name__ == "__main__":
-    intro()
+    rolls = []
 
+    def mock_roller(num):
+        return rolls.pop(0) if rolls else default_play(num)
+
+    intro()
+    play_dice()
